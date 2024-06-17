@@ -1,0 +1,89 @@
+version: '3'
+
+services:
+  product_db:
+    image: 'postgres:latest'
+    environment:
+      POSTGRES_DB: 'product_db'
+      POSTGRES_USER: 'hasan2'
+      POSTGRES_PASSWORD: '1373@1373@7898'
+    volumes:
+      - 'product_postgres_data:/var/lib/postgresql/data'
+
+  order_db:
+    image: 'postgres:latest'
+    environment:
+      POSTGRES_DB: 'order_db'
+      POSTGRES_USER: 'hasan2'
+      POSTGRES_PASSWORD: '1373@1373@7898'
+    volumes:
+      - 'order_postgres_data:/var/lib/postgresql/data'
+
+  redis:
+    image: 'redis:latest'
+
+  rabbitmq:
+    image: 'rabbitmq:latest'
+    environment:
+      RABBITMQ_DEFAULT_USER: 'mhz'
+      RABBITMQ_DEFAULT_PASS: 'mhz'
+    ports:
+      - "15672:15672" 
+      - "5672:5672"  
+
+  product:
+    build: './product_service'
+    command: 'gunicorn config.wsgi:application --bind 0.0.0.0:8000'
+    volumes:
+      - './product_service:/app'
+    ports:
+      - "8001:8000"
+    depends_on:
+      - 'product_db'
+      - 'redis'
+      - 'rabbitmq'
+    environment:
+      - 'DATABASE_URL=postgres://hasan2:1373@1373@7898@product_db:5432/product_db'
+      - 'REDIS_URL=redis://redis:6379/0'
+      - 'RABBITMQ_URL=amqp://mhz:mhz@rabbitmq:5672/'
+
+  order:
+    build: './order_servic'
+    command: 'gunicorn config.wsgi:application --bind 0.0.0.0:8000'
+    volumes:
+      - './order_service:/app'
+    ports:
+      - "8002:8000"
+    depends_on:
+      - 'order_db'
+      - 'redis'
+      - 'rabbitmq'
+    environment:
+      - 'DATABASE_URL=postgres://hasan2:1373@1373@7898@order_db:5432/order_db'
+      - 'REDIS_URL=redis://redis:6379/0'
+      - 'RABBITMQ_URL=amqp://mhz:mhz@rabbitmq:5672/'
+
+  product_manage:
+    build: './product_service'
+    command: 'python manage.py runserver'
+    volumes:
+      - './product_service:/app'
+    depends_on:
+      - 'product_db'
+      - 'redis'
+      - 'rabbitmq'
+
+  product_consumer:
+    build: './product_service'
+    command: 'python manage.py start_consumer'
+    volumes:
+      - './product_service:/app'
+    depends_on:
+      - 'product_db'
+      - 'redis'
+      - 'rabbitmq'
+
+volumes:
+  product_postgres_data:
+  order_postgres_data:
+

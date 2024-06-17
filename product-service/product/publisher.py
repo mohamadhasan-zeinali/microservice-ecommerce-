@@ -16,7 +16,7 @@ def publish_product_updated(product_data):
         routing_key='product_queue',
         body=message,
         properties=pika.BasicProperties(
-            delivery_mode=2,  # make message persistent
+            delivery_mode=2,
         )
     )
 

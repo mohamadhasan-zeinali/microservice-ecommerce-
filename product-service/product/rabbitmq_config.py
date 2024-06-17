@@ -2,11 +2,8 @@
 import pika
 from config import settings
 
+
 def get_rabbitmq_connection():
-    # connection = pika.BlockingConnection(
-    #     pika.ConnectionParameters(host='localhost')
-    # )
-    # return connection
     connection = pika.BlockingConnection(pika.ConnectionParameters(
         host=settings.RABBITMQ_HOST,
         port=settings.RABBITMQ_PORT,
